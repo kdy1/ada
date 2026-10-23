@@ -1,0 +1,3 @@
+https://example.com/	https://example.com/
+HTTP://Example.COM:80/a?x=1#fragment	http://example.com/a?x=1#fragment
+https://user:pass@example.com:8443/api/v1/items?q=test#top	https://user:pass@example.com:8443/api/v1/items?q=test#top

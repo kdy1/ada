@@ -1,0 +1,3 @@
+https://example.com/a/b/../c/./d	https://example.com/a/c/d
+file:///tmp/../var/log/app.txt	file:///var/log/app.txt
+https://example.com/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/item	https://example.com/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/directory/item
