@@ -648,11 +648,6 @@ ada_really_inline bool url_aggregator::parse_host(std::string_view input) {
   ada_log("parse_host to_ascii succeeded ", *host, " [", host->size(),
           " bytes]");
 
-  if (std::ranges::any_of(host.value(),
-                          ada::unicode::is_forbidden_domain_code_point)) {
-    return is_valid = false;
-  }
-
   // If asciiDomain ends in a number, then return the result of IPv4 parsing
   // asciiDomain.
   if (checkers::is_ipv4(host.value())) {

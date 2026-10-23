@@ -34,6 +34,51 @@ TYPED_TEST(basic_tests, bad_percent_encoding) {
   SUCCEED();
 }
 
+TYPED_TEST(basic_tests, domain_to_ascii_host_validation) {
+  for (std::string_view host :
+       {"bücher.example", "b%C3%BCcher.example", "xn--bcher-kva.example"}) {
+    SCOPED_TRACE(host);
+    auto parsed = ada::parse<TypeParam>(std::string("https://") +
+                                        std::string(host) + "/path?q#f");
+    ASSERT_TRUE(parsed);
+    EXPECT_EQ(parsed->get_hostname(), "xn--bcher-kva.example");
+    auto url = ada::parse<TypeParam>("https://original.example:8443/path?q#f");
+    ASSERT_TRUE(url);
+    ASSERT_TRUE(url->set_host(std::string(host) + ":9443"));
+    EXPECT_EQ(url->get_href(), "https://xn--bcher-kva.example:9443/path?q#f");
+    ASSERT_TRUE(url->set_hostname(host));
+    EXPECT_EQ(url->get_href(), "https://xn--bcher-kva.example:9443/path?q#f");
+  }
+
+  // Percent decoding must not admit forbidden ASCII domain code points.
+  for (std::string_view escaped :
+       {"%00", "%01", "%09", "%0A", "%0D", "%1F", "%20",
+        "%23", "%25", "%2F", "%3A", "%3C", "%3E", "%3F",
+        "%40", "%5B", "%5C", "%5D", "%5E", "%7C", "%7F"}) {
+    const std::string host = "bücher" + std::string(escaped) + ".example";
+    SCOPED_TRACE(host);
+    EXPECT_FALSE(ada::parse<TypeParam>("https://" + host + "/"));
+    auto url = ada::parse<TypeParam>("https://original.example:8443/path?q#f");
+    ASSERT_TRUE(url);
+    EXPECT_FALSE(url->set_host(host + ":9443"));
+    EXPECT_EQ(url->get_href(), "https://original.example:8443/path?q#f");
+    EXPECT_FALSE(url->set_hostname(host));
+    EXPECT_EQ(url->get_href(), "https://original.example:8443/path?q#f");
+  }
+
+  // IDNA can produce an empty domain or map Unicode to forbidden ASCII.
+  for (std::string_view host : {"\xC2\xAD", "bad\xEF\xBC\x8Fhost"}) {
+    SCOPED_TRACE(host);
+    EXPECT_FALSE(ada::parse<TypeParam>(std::string("https://") +
+                                       std::string(host) + "/"));
+    auto url = ada::parse<TypeParam>("https://original.example:8443/path?q#f");
+    ASSERT_TRUE(url);
+    EXPECT_FALSE(url->set_host(host));
+    EXPECT_FALSE(url->set_hostname(host));
+    EXPECT_EQ(url->get_href(), "https://original.example:8443/path?q#f");
+  }
+}
+
 TYPED_TEST(basic_tests, spaces_spaces) {
   auto r = ada::parse<TypeParam>("http://www.google.com/%37/ /");
   ASSERT_TRUE(r);
